@@ -1,6 +1,8 @@
 DOCKER_IMAGE_TAG ?= alpine
 DOCKER_IMAGE_NAME ?= postgres
 DOCKER_CONTAINER_NAME ?= postgres_1
+PGDATA ?= $(PWD)/pgdata
+POSTGRES_INITDB_ARGS ?= "--debug"
 
 default: help
 
@@ -11,14 +13,16 @@ help:
 	@echo "  bash            starts bash inside the running container"
 	@echo "  stop            stops the container"
 	@echo "  rm              removes the container and wipes image on disk"
-	@echo "  pgc             starts postgres client container and connect"
 
 run:
 	@echo "Running docker image..."
 	docker run --name $(DOCKER_CONTAINER_NAME) \
 	-v $(PWD)/initdb.d:/docker-entrypoint-initdb.d:ro \
-	--env-file postgres.env \
-	-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) -p 5432:5432 -d "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)"
+	-v $(PWD)/pgdata:/pgdata:rw \
+	--env-file $(PWD)/postgres.env \
+	-e POSTGRES_INITDB_ARGS="$(POSTGRES_INITDB_ARGS)" \
+	-e PGDATA="$(PGDATA)" \
+	-p 5432:5432 -d "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)"
 
 bash:
 	@echo "Starting bash..."
